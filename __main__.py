@@ -183,5 +183,3 @@ email_function = gcp.cloudfunctions.Function("email-notifier-fn",
 pulumi.export("upload_bucket", upload_bucket.name)
 pulumi.export("known_faces_bucket", known_faces_bucket.name)
 pulumi.export("cloud_run_url", cloud_run.statuses[0].url)
-export SENDGRID_API_KEY="SG.tu_llave_aqui"
-export SENDER_EMAIL="tu-correo-verificado@unsa.edu.pe"
