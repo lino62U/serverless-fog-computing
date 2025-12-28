@@ -150,8 +150,8 @@ email_channel = gcp.monitoring.NotificationChannel(
 # 2. Métrica basada en logs (Clase correcta: gcp.logging.Metric)
 match_metric = gcp.logging.Metric(
     "rostro-match-metric",
-    # Filtramos exactamente lo que imprime tu Python
-    filter='resource.type="cloud_run_revision" AND textPayload:"status": "MATCH"',
+    # Usamos comillas simples fuera y escapamos las comillas interiores para el JSON
+    filter='resource.type="cloud_run_revision" AND textPayload:"\\"status\\": \\"MATCH\\""',
     metric_descriptor=gcp.logging.MetricMetricDescriptorArgs(
         metric_kind="DELTA",
         value_type="INT64",
