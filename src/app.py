@@ -33,19 +33,25 @@ publisher = pubsub_v1.PublisherClient(credentials=credentials)
 # --------------------------------------------------
 
 def get_signed_url(bucket_name, object_name):
-    """Genera una URL firmada usando la identidad de la Service Account"""
+    # Forzamos la lectura de la variable justo antes de usarla
+    sa_email = os.environ.get("SERVICE_ACCOUNT_EMAIL")
+    
     try:
-        bucket = storage_client.bucket(bucket_name)
+        # IMPORTANTE: No pasar credenciales manualmente aquí, 
+        # dejar que el cliente las tome del entorno automáticamente
+        client = storage.Client() 
+        bucket = client.bucket(bucket_name)
         blob = bucket.blob(object_name)
 
-        return blob.generate_signed_url(
+        url = blob.generate_signed_url(
             version="v4",
             expiration=timedelta(hours=1),
             method="GET",
-            service_account_email=SERVICE_ACCOUNT_EMAIL
+            service_account_email=sa_email # <--- Usar la variable local
         )
+        return url
     except Exception as e:
-        print(f"❌ Error al generar URL firmada: {e}")
+        print(f"❌ Error crítico en firma: {e}")
         return None
 
 def download_image(bucket_name, blob_name, dest):
