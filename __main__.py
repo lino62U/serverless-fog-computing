@@ -134,6 +134,53 @@ gcp.storage.Notification(
 )
 
 # -------------------------------------------------
+# 7. NOTIFICACIONES POR CORREO (CORREGIDO)
+# -------------------------------------------------
+
+# 1. Canal de notificación
+email_channel = gcp.monitoring.NotificationChannel(
+    "email-notification-channel",
+    display_name="Canal de Alertas Rostros",
+    type="email",
+    labels={
+        "email_address": "alupoc@unsa.edu.pe", 
+    },
+)
+
+# 2. Métrica basada en logs (Clase correcta: gcp.logging.Metric)
+match_metric = gcp.logging.Metric(
+    "rostro-match-metric",
+    # Filtramos exactamente lo que imprime tu Python
+    filter='resource.type="cloud_run_revision" AND textPayload:"status": "MATCH"',
+    metric_descriptor=gcp.logging.MetricMetricDescriptorArgs(
+        metric_kind="DELTA",
+        value_type="INT64",
+    ),
+)
+
+# 3. Política de alerta
+alert_policy = gcp.monitoring.AlertPolicy(
+    "alerta-match-policy",
+    display_name="Notificación de Rostro Conocido Detectado",
+    combiner="OR",
+    conditions=[gcp.monitoring.AlertPolicyConditionArgs(
+        display_name="Match detectado en logs",
+        condition_threshold=gcp.monitoring.AlertPolicyConditionConditionThresholdArgs(
+            # Referencia a la métrica creada arriba
+            filter=match_metric.name.apply(lambda name: f'metric.type="logging.googleapis.com/user/{name}" AND resource.type="cloud_run_revision"'),
+            duration="0s", 
+            comparison="COMPARISON_GT",
+            threshold_value=0,
+            aggregations=[gcp.monitoring.AlertPolicyConditionConditionThresholdAggregationArgs(
+                alignment_period="60s",
+                per_series_aligner="ALIGN_COUNT",
+            )],
+        ),
+    )],
+    notification_channels=[email_channel.name],
+)
+
+# -------------------------------------------------
 # OUTPUTS
 # -------------------------------------------------
 

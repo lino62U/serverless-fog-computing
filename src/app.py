@@ -33,7 +33,7 @@ def download_image(bucket_name, blob_name, dest):
 def load_known_encodings():
     encodings = []
     bucket = storage_client.bucket(KNOWN_BUCKET)
-
+    
     for blob in bucket.list_blobs():
         if not blob.name.lower().endswith((".jpg", ".jpeg", ".png")):
             continue
