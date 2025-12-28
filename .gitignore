@@ -1,0 +1,15 @@
+# Entornos virtuales de Python
+venv/
+backend/venv/
+*.pyc
+__pycache__/
+
+# Node modules
+node_modules/
+frontend/node_modules/
+
+# Archivos de dependencias de paquetes
+*.log
+
+# Archivos de configuración locales
+.env

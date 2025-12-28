@@ -1,0 +1,5 @@
+face-recognition
+flask
+google-cloud-storage
+google-cloud-pubsub
+flask-cors
