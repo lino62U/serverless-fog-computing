@@ -57,12 +57,12 @@ gcp.projects.IAMMember(
 )
 
 # Permitir que la SA se firme a sí misma para generar URLs firmadas
-gcp.projects.IAMMember(
-    "sa-token-creator",
-    project=PROJECT,
-    role="roles/iam.serviceAccountTokenCreator",
-    member=pulumi.Output.concat("serviceAccount:", run_sa.email),
-)
+# gcp.projects.IAMMember(
+#     "sa-token-creator",
+#     project=PROJECT,
+#     role="roles/iam.serviceAccountTokenCreator",
+#     member=pulumi.Output.concat("serviceAccount:", run_sa.email),
+# )
 
 # -------------------------------------------------
 # 4. CLOUD RUN
