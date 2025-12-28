@@ -11,11 +11,11 @@ from google.cloud import storage
 from google.cloud import pubsub_v1
 
 app = Flask(__name__)
-CORS(app)  # 👈 HABILITA CORS
+CORS(app)
 
 # Variables de entorno
 KNOWN_BUCKET = os.environ.get("KNOWN_FACES_BUCKET")
-TOPIC_ID = os.environ.get("TOPIC_ID")
+TOPIC_ID = os.environ.get("ALERTS_TOPIC")   # 👈 FIX AQUÍ
 PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT")
 
 storage_client = storage.Client()
@@ -54,10 +54,12 @@ def load_known_encodings():
 
 def publish_alert(message: dict):
     if not TOPIC_ID:
+        print("⚠️ ALERTS_TOPIC no configurado")
         return
 
     topic_path = publisher.topic_path(PROJECT_ID, TOPIC_ID)
     publisher.publish(topic_path, json.dumps(message).encode("utf-8"))
+    print("🚨 Alerta publicada:", message)
 
 # --------------------------------------------------
 # HANDLER
@@ -88,6 +90,7 @@ def handler():
     unknown_faces = face_recognition.face_encodings(unknown_img)
 
     if not unknown_faces:
+        print("😕 No se detectaron rostros")
         return "", 204
 
     unknown_encoding = unknown_faces[0]

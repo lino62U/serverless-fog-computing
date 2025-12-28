@@ -1,0 +1,53 @@
+name: CI/CD Face Recognition
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Google Cloud Auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY_JSON }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker
+        run: gcloud auth configure-docker gcr.io --quiet
+
+      - name: Build and Push Docker
+        run: |
+          # Usamos el SHA del commit como ID único
+          IMAGE_URI=gcr.io/${{ secrets.GCP_PROJECT_ID }}/face-recognition:${{ github.sha }}
+          docker build -t $IMAGE_URI ./src
+          docker push $IMAGE_URI
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Pulumi Up
+        uses: pulumi/actions@v5
+        with:
+          command: up
+          stack-name: dev
+          args: --yes --skip-preview
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
+          # PASAMOS EL ID ÚNICO A PULUMI
+          IMAGE_URI: gcr.io/${{ secrets.GCP_PROJECT_ID }}/face-recognition:${{ github.sha }}

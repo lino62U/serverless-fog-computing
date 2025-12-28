@@ -1,8 +1,13 @@
+import os # <--- CAMBIO 1: Importar la librería OS para leer variables de entorno
 import pulumi
 import pulumi_gcp as gcp
 
 PROJECT = gcp.config.project
 REGION = "us-central1"
+
+# CAMBIO 2: Leer la imagen desde el entorno o usar 'latest' por defecto
+# Esto permite que GitHub Actions "inyecte" la imagen con el SHA del commit
+container_image = os.environ.get("IMAGE_URI", f"gcr.io/{PROJECT}/face-recognition:latest")
 
 # -------------------------------------------------
 # 1. BUCKETS
@@ -63,7 +68,7 @@ cloud_run = gcp.cloudrun.Service(
             service_account_name=run_sa.email,
             containers=[
                 gcp.cloudrun.ServiceTemplateSpecContainerArgs(
-                    image=f"gcr.io/{PROJECT}/face-recognition:latest",
+                    image=container_image, # <--- CAMBIO 3: Usar la variable en lugar del texto fijo
                     resources=gcp.cloudrun.ServiceTemplateSpecContainerResourcesArgs(
                         limits={
                             "memory": "4Gi",
