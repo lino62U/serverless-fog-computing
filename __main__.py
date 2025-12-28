@@ -148,9 +148,9 @@ fn_archive = gcp.storage.BucketObject("fn-code-zip",
 )
 
 email_function = gcp.cloudfunctions.Function("email-notifier-fn",
-    location=REGION,
+    region=REGION,  # 👈 CAMBIADO: Antes era location
     runtime="python310",
-    entry_point="send_email_notification", # Nombre de la función en main.py
+    entry_point="send_email_notification",
     source_archive_bucket=source_bucket.name,
     source_archive_object=fn_archive.name,
     event_trigger=gcp.cloudfunctions.FunctionEventTriggerArgs(
@@ -158,8 +158,8 @@ email_function = gcp.cloudfunctions.Function("email-notifier-fn",
         resource=alerts_topic.id,
     ),
     environment_variables={
-        "SENDGRID_API_KEY": os.environ.get("SENDGRID_API_KEY"), # Inyectado desde GitHub
-        "SENDER_EMAIL": os.environ.get("SENDER_EMAIL"),       # Inyectado desde GitHub
+        "SENDGRID_API_KEY": os.environ.get("SENDGRID_API_KEY"),
+        "SENDER_EMAIL": os.environ.get("SENDER_EMAIL"),
         "EMAIL_TO": "alupoc@unsa.edu.pe"
     }
 )
