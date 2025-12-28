@@ -56,6 +56,14 @@ gcp.projects.IAMMember(
     member=pulumi.Output.concat("serviceAccount:", run_sa.email),
 )
 
+# Permitir que la SA se firme a sí misma para generar URLs firmadas
+gcp.projects.IAMMember(
+    "sa-token-creator",
+    project=PROJECT,
+    role="roles/iam.serviceAccountTokenCreator",
+    member=pulumi.Output.concat("serviceAccount:", run_sa.email),
+)
+
 # -------------------------------------------------
 # 4. CLOUD RUN
 # -------------------------------------------------
@@ -87,6 +95,10 @@ cloud_run = gcp.cloudrun.Service(
                         gcp.cloudrun.ServiceTemplateSpecContainerEnvArgs(
                             name="GOOGLE_CLOUD_PROJECT",
                             value=PROJECT,
+                        ),
+                        gcp.cloudrun.ServiceTemplateSpecContainerEnvArgs(
+                            name="SERVICE_ACCOUNT_EMAIL",
+                            value=run_sa.email,
                         ),
                     ],
                 )
@@ -171,3 +183,5 @@ email_function = gcp.cloudfunctions.Function("email-notifier-fn",
 pulumi.export("upload_bucket", upload_bucket.name)
 pulumi.export("known_faces_bucket", known_faces_bucket.name)
 pulumi.export("cloud_run_url", cloud_run.statuses[0].url)
+export SENDGRID_API_KEY="SG.tu_llave_aqui"
+export SENDER_EMAIL="tu-correo-verificado@unsa.edu.pe"
