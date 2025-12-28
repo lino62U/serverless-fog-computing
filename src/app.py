@@ -38,7 +38,6 @@ def get_signed_url(bucket_name, object_name):
         bucket = storage_client.bucket(bucket_name)
         blob = bucket.blob(object_name)
 
-        # Es vital usar version='v4' y proveer el service_account_email en Cloud Run
         return blob.generate_signed_url(
             version="v4",
             expiration=timedelta(hours=1),

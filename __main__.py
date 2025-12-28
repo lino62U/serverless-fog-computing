@@ -160,7 +160,7 @@ fn_archive = gcp.storage.BucketObject("fn-code-zip",
 )
 
 email_function = gcp.cloudfunctions.Function("email-notifier-fn",
-    region=REGION,  # 👈 CAMBIADO: Antes era location
+    region=REGION,  
     runtime="python310",
     entry_point="send_email_notification",
     source_archive_bucket=source_bucket.name,
