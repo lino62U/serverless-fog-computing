@@ -137,47 +137,31 @@ gcp.storage.Notification(
 # 7. NOTIFICACIONES POR CORREO (CORREGIDO)
 # -------------------------------------------------
 
-# 1. Canal de notificación
-email_channel = gcp.monitoring.NotificationChannel(
-    "email-notification-channel",
-    display_name="Canal de Alertas Rostros",
-    type="email",
-    labels={
-        "email_address": "alupoc@unsa.edu.pe", 
-    },
+# Bucket para el código de la función
+source_bucket = gcp.storage.Bucket("fn-source-bucket", location=REGION)
+
+# Empaquetar y subir la carpeta 'notifier_fn'
+# Asegúrate de crear esta carpeta en tu proyecto
+fn_archive = gcp.storage.BucketObject("fn-code-zip",
+    bucket=source_bucket.name,
+    source=pulumi.FileArchive("./notifier_fn")
 )
 
-# 2. Métrica basada en logs (Clase correcta: gcp.logging.Metric)
-match_metric = gcp.logging.Metric(
-    "rostro-match-metric",
-    # Buscamos simplemente que contenga la palabra MATCH y status en el mismo mensaje
-    filter='resource.type="cloud_run_revision" AND textPayload:"MATCH" AND textPayload:"status"',
-    metric_descriptor=gcp.logging.MetricMetricDescriptorArgs(
-        metric_kind="DELTA",
-        value_type="INT64",
+email_function = gcp.cloudfunctions.Function("email-notifier-fn",
+    location=REGION,
+    runtime="python310",
+    entry_point="send_email_notification", # Nombre de la función en main.py
+    source_archive_bucket=source_bucket.name,
+    source_archive_object=fn_archive.name,
+    event_trigger=gcp.cloudfunctions.FunctionEventTriggerArgs(
+        event_type="google.pubsub.topic.publish",
+        resource=alerts_topic.id,
     ),
-)
-
-# 3. Política de alerta
-alert_policy = gcp.monitoring.AlertPolicy(
-    "alerta-match-policy",
-    display_name="Notificación de Rostro Conocido Detectado",
-    combiner="OR",
-    conditions=[gcp.monitoring.AlertPolicyConditionArgs(
-        display_name="Match detectado en logs",
-        condition_threshold=gcp.monitoring.AlertPolicyConditionConditionThresholdArgs(
-            # Referencia a la métrica creada arriba
-            filter=match_metric.name.apply(lambda name: f'metric.type="logging.googleapis.com/user/{name}" AND resource.type="cloud_run_revision"'),
-            duration="0s", 
-            comparison="COMPARISON_GT",
-            threshold_value=0,
-            aggregations=[gcp.monitoring.AlertPolicyConditionConditionThresholdAggregationArgs(
-                alignment_period="60s",
-                per_series_aligner="ALIGN_COUNT",
-            )],
-        ),
-    )],
-    notification_channels=[email_channel.name],
+    environment_variables={
+        "SENDGRID_API_KEY": os.environ.get("SENDGRID_API_KEY"), # Inyectado desde GitHub
+        "SENDER_EMAIL": os.environ.get("SENDER_EMAIL"),       # Inyectado desde GitHub
+        "EMAIL_TO": "alupoc@unsa.edu.pe"
+    }
 )
 
 # -------------------------------------------------

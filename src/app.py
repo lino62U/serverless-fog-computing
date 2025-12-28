@@ -3,7 +3,7 @@ import json
 import base64
 from flask import Flask, request
 from flask_cors import CORS
-
+from datetime import timedelta
 import face_recognition
 import numpy as np
 
@@ -105,14 +105,21 @@ def handler():
     for known in known_faces:
         distance = np.linalg.norm(known["encoding"] - unknown_encoding)
         if distance < 0.45:
+            # --- NUEVO: GENERAR URL FIRMADA ---
+            bucket = storage_client.bucket(bucket_name)
+            blob = bucket.blob(object_name)
+            signed_url = blob.generate_signed_url(expiration=timedelta(hours=1))
+            
             publish_alert({
                 "status": "MATCH",
                 "matched_with": known["name"],
                 "distance": float(distance),
-                "image": object_name
+                "image": object_name,
+                "image_url": signed_url  # Se envía a la Cloud Function
             })
             return "", 204
 
+    # Para desconocidos también podrías generar URL si quieres ver quién es
     publish_alert({
         "status": "UNKNOWN",
         "image": object_name
