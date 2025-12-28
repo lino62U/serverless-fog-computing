@@ -53,13 +53,19 @@ def load_known_encodings():
     return encodings
 
 def publish_alert(message: dict):
-    if not TOPIC_ID:
-        print("⚠️ ALERTS_TOPIC no configurado")
+    if not TOPIC_ID or not PROJECT_ID:
+        print(f"⚠️ Error: TOPIC_ID({TOPIC_ID}) o PROJECT_ID({PROJECT_ID}) faltantes", flush=True)
         return
 
-    topic_path = publisher.topic_path(PROJECT_ID, TOPIC_ID)
-    publisher.publish(topic_path, json.dumps(message).encode("utf-8"))
-    print("🚨 Alerta publicada:", message)
+    # Construir el path completo: projects/{PROJECT_ID}/topics/{TOPIC_ID}
+    topic_path = f"projects/{PROJECT_ID}/topics/{TOPIC_ID}"
+    
+    try:
+        future = publisher.publish(topic_path, json.dumps(message).encode("utf-8"))
+        future.result() # Esperar a que se publique
+        print(f"🚨 Alerta publicada en {topic_path}: {message}", flush=True)
+    except Exception as e:
+        print(f"❌ Error al publicar en PubSub: {e}", flush=True)
 
 # --------------------------------------------------
 # HANDLER
