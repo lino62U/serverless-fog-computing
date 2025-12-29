@@ -1,5 +1,8 @@
-face-recognition
-flask
+insightface
+onnxruntime
+opencv-python
+numpy
 google-cloud-storage
 google-cloud-pubsub
+flask
 flask-cors
